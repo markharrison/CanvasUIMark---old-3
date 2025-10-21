@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CanvasUIMark Showcase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .canvas-container {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls {
+            max-width: 1280px;
+            width: 100%;
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .controls h2 {
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: inline-block;
+            width: 150px;
+            margin-right: 10px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .info {
+            margin-top: 10px;
+            padding: 15px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info strong {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>CanvasUIMark Showcase</h1>
+    
+    <div class="canvas-container">
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="controls">
+        <h2>External Controls</h2>
+        
+        <div class="control-group">
+            <button onclick="showModalDemo()">Show Modal Dialog</button>
+            <button onclick="showToastInfo()">Show Info Toast</button>
+            <button onclick="showToastSuccess()">Show Success Toast</button>
+            <button onclick="showToastWarning()">Show Warning Toast</button>
+            <button onclick="showToastError()">Show Error Toast</button>
+        </div>
+
+        <div class="control-group">
+            <button onclick="changeBackground('#1a1a1a')">Dark Background</button>
+            <button onclick="changeBackground('#2c3e50')">Blue Background</button>
+            <button onclick="changeBackground('#34495e')">Gray Background</button>
+            <button onclick="setGradientBackground()">Gradient Background</button>
+        </div>
+
+        <div class="info">
+            <strong>Instructions:</strong><br>
+            • Use <strong>TAB</strong> to navigate between controls<br>
+            • Use <strong>Arrow Keys</strong> to navigate within menu/radio controls and adjust sliders<br>
+            • Use <strong>Enter</strong> or <strong>Space</strong> to activate buttons and toggles<br>
+            • Use <strong>ESC</strong> to test the escape event (check console)<br>
+            • Click with mouse to interact with any control<br>
+            • Connect a gamepad to test controller support (D-pad and A button)<br>
+            • The canvas scales responsively - try resizing your browser window!
+        </div>
+    </div>
+
+    <script src="canvasUImark.js"></script>
+    <script>
+        // Initialize the canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ui = new CanvasUIMark(canvas, {
+            backgroundColor: '#1a1a1a'
+        });
+
+        // Set up escape key handler
+        ui.onEscape = () => {
+            console.log('Escape key pressed!');
+            showToastInfo();
+        };
+
+        // Add a title text
+        ui.addText('CanvasUIMark Control Showcase', 640, 30, {
+            font: 'bold 32px Arial',
+            color: '#4CAF50',
+            align: 'center',
+            baseline: 'top'
+        });
+
+        // Add description text
+        ui.addText('Use Tab to navigate • Arrow keys to adjust • Enter/Space to select', 640, 70, {
+            font: '16px Arial',
+            color: '#cccccc',
+            align: 'center',
+            baseline: 'top'
+        });
+
+        // Column 1: Buttons and Menu
+        let column1X = 50;
+        let currentY = 120;
+
+        // Button Control
+        ui.addText('Button Control:', column1X, currentY, {
+            font: 'bold 18px Arial',
+            color: '#ffffff'
+        });
+        currentY += 30;
+
+        const button1 = new CanvasUIControls.Button(
+            column1X, currentY, 200, 50,
+            'Click Me!',
+            () => {
+                ui.showToast('Button clicked!', 'success', 2000);
+            }
+        );
+        ui.addControl(button1);
+        currentY += 70;
+
+        // Menu Control
+        ui.addText('Menu Control:', column1X, currentY, {
+            font: 'bold 18px Arial',
+            color: '#ffffff'
+        });
+        currentY += 30;
+
+        const menu = new CanvasUIControls.Menu(
+            column1X, currentY, 200, 50,
+            [
+                { label: 'New Game', callback: () => ui.showToast('New Game selected', 'info') },
+                { label: 'Load Game', callback: () => ui.showToast('Load Game selected', 'info') },
+                { label: 'Options', callback: () => ui.showToast('Options selected', 'info') },
+                { label: 'Exit', callback: () => ui.showToast('Exit selected', 'info') }
+            ]
+        );
+        ui.addControl(menu);
+        currentY += 220;
+
+        // Column 2: Toggle and TextInput
+        let column2X = 300;
+        currentY = 120;
+
+        // Toggle Control
+        ui.addText('Toggle Control:', column2X, currentY, {
+            font: 'bold 18px Arial',
+            color: '#ffffff'
+        });
+        currentY += 30;
+
+        const toggle = new CanvasUIControls.Toggle(
+            column2X, currentY, 250, 50,
+            'Sound Effects',
+            true,
+            (value) => {
+                ui.showToast(`Sound ${value ? 'ON' : 'OFF'}`, value ? 'success' : 'warning', 2000);
+            }
+        );
+        ui.addControl(toggle);
+        currentY += 70;
+
+        // TextInput Control
+        ui.addText('TextInput Control:', column2X, currentY, {
+            font: 'bold 18px Arial',
+            color: '#ffffff'
+        });
+        currentY += 30;
+
+        const textInput = new CanvasUIControls.TextInput(
+            column2X, currentY, 300, 50,
+            'Enter your name...'
+        );
+        ui.addControl(textInput);
+        currentY += 70;
+
+        // Another button to show text input value
+        const showInputButton = new CanvasUIControls.Button(
+            column2X, currentY, 200, 50,
+            'Show Input Value',
+            () => {
+                const value = textInput.value || '(empty)';
+                ui.showModal('Input Value', `You entered: ${value}`, [
+                    { label: 'OK', callback: () => {} }
+                ]);
+            }
+        );
+        ui.addControl(showInputButton);
+        currentY += 70;
+
+        // Column 3: Radio and Slider
+        let column3X = 650;
+        currentY = 120;
+
+        // Radio Control
+        ui.addText('Radio Control:', column3X, currentY, {
+            font: 'bold 18px Arial',
+            color: '#ffffff'
+        });
+        currentY += 30;
+
+        const radio = new CanvasUIControls.Radio(
+            column3X, currentY, 250, 45,
+            ['Easy', 'Medium', 'Hard', 'Expert'],
+            1,
+            (index, value) => {
+                ui.showToast(`Difficulty: ${value}`, 'info', 2000);
+            }
+        );
+        ui.addControl(radio);
+        currentY += 200;
+
+        // Slider Control
+        ui.addText('Slider Control:', column3X, currentY, {
+            font: 'bold 18px Arial',
+            color: '#ffffff'
+        });
+        currentY += 30;
+
+        const slider = new CanvasUIControls.Slider(
+            column3X, currentY, 300, 80,
+            0, 100, 50, 5,
+            'Volume',
+            (value) => {
+                console.log('Volume changed to:', value);
+            }
+        );
+        ui.addControl(slider);
+        currentY += 100;
+
+        // Another slider with different range
+        const speedSlider = new CanvasUIControls.Slider(
+            column3X, currentY, 300, 80,
+            10, 200, 100, 10,
+            'Speed',
+            (value) => {
+                console.log('Speed changed to:', value);
+            }
+        );
+        ui.addControl(speedSlider);
+
+        // Add a test image (placeholder - will show once loaded)
+        const testImage = new Image();
+        testImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzRDQUY1MCIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE2IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2U8L3RleHQ+PC9zdmc+';
+        testImage.onload = () => {
+            ui.addImage(testImage, 1050, 120, 100, 100);
+            ui.addText('Image Display', 1100, 230, {
+                font: 'bold 16px Arial',
+                color: '#ffffff',
+                align: 'center'
+            });
+        };
+
+        // External control functions
+        function showModalDemo() {
+            ui.showModal(
+                'Demo Modal Dialog',
+                'This is a modal dialog box. It can display a title, message, and multiple buttons. The background is semi-transparent. Click a button or press ESC to close.',
+                [
+                    { label: 'Confirm', callback: () => ui.showToast('Confirmed!', 'success') },
+                    { label: 'Cancel', callback: () => ui.showToast('Cancelled', 'warning') },
+                    { label: 'Close', callback: () => {} }
+                ]
+            );
+        }
+
+        function showToastInfo() {
+            ui.showToast('This is an info toast notification', 'info', 3000);
+        }
+
+        function showToastSuccess() {
+            ui.showToast('Operation completed successfully!', 'success', 3000);
+        }
+
+        function showToastWarning() {
+            ui.showToast('Warning: This is a test warning', 'warning', 4000);
+        }
+
+        function showToastError() {
+            ui.showToast('Error: Something went wrong', 'error', 4000);
+        }
+
+        function changeBackground(color) {
+            ui.setBackground(color);
+            ui.showToast('Background changed', 'info', 2000);
+        }
+
+        function setGradientBackground() {
+            ui.setBackgroundGradient([
+                { offset: 0, color: '#1a1a1a' },
+                { offset: 0.5, color: '#2c3e50' },
+                { offset: 1, color: '#34495e' }
+            ]);
+            ui.showToast('Gradient applied', 'info', 2000);
+        }
+
+        // Show welcome toast on load
+        setTimeout(() => {
+            ui.showToast('Welcome to CanvasUIMark!', 'success', 3000);
+        }, 500);
+
+        console.log('CanvasUIMark showcase loaded successfully!');
+        console.log('Press ESC to test the escape event handler');
+    </script>
+</body>
+</html>
