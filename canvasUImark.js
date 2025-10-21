@@ -707,39 +707,39 @@
             const height = itemHeight * options.length;
             super(x, y, width, height, opts);
             this.itemHeight = itemHeight;
-            this.options = options;
+            this.items = options;
             this.selectedIndex = selectedIndex;
             this.callback = callback;
         }
 
         handleClick(x, y) {
             const index = Math.floor((y - this.y) / this.itemHeight);
-            if (index >= 0 && index < this.options.length) {
+            if (index >= 0 && index < this.items.length) {
                 this.selectedIndex = index;
                 if (this.callback) {
-                    this.callback(this.selectedIndex, this.options[this.selectedIndex]);
+                    this.callback(this.selectedIndex, this.items[this.selectedIndex]);
                 }
             }
         }
 
         handleKeyDown(e) {
             if (e.key === 'ArrowUp') {
-                this.selectedIndex = (this.selectedIndex - 1 + this.options.length) % this.options.length;
+                this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
                 if (this.callback) {
-                    this.callback(this.selectedIndex, this.options[this.selectedIndex]);
+                    this.callback(this.selectedIndex, this.items[this.selectedIndex]);
                 }
                 e.preventDefault();
             } else if (e.key === 'ArrowDown') {
-                this.selectedIndex = (this.selectedIndex + 1) % this.options.length;
+                this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
                 if (this.callback) {
-                    this.callback(this.selectedIndex, this.options[this.selectedIndex]);
+                    this.callback(this.selectedIndex, this.items[this.selectedIndex]);
                 }
                 e.preventDefault();
             }
         }
 
         draw(ctx, isFocused) {
-            for (let i = 0; i < this.options.length; i++) {
+            for (let i = 0; i < this.items.length; i++) {
                 const y = this.y + i * this.itemHeight;
                 const isSelected = i === this.selectedIndex;
 
@@ -776,7 +776,7 @@
                 ctx.fillStyle = this.options.textColor;
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(this.options[i], radioX + radioSize, radioY);
+                ctx.fillText(this.items[i], radioX + radioSize, radioY);
             }
         }
     }
