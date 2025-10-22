@@ -834,13 +834,6 @@
         }
 
         draw(ctx, isFocused) {
-            // Draw outer border around entire control
-            if (isFocused) {
-                ctx.strokeStyle = this.options.focusColor;
-                ctx.lineWidth = this.options.borderWidth;
-                ctx.strokeRect(this.x, this.y, this.width, this.height);
-            }
-
             for (let i = 0; i < this.items.length; i++) {
                 const y = this.y + i * this.itemHeight;
                 const isSelected = i === this.selectedIndex;
@@ -848,13 +841,6 @@
                 // Background
                 ctx.fillStyle = this.options.backgroundColor;
                 ctx.fillRect(this.x, y, this.width, this.itemHeight);
-
-                // Border - only draw if not focused (to avoid drawing lines between items)
-                if (!isFocused) {
-                    ctx.strokeStyle = this.options.borderColor;
-                    ctx.lineWidth = this.options.borderWidth;
-                    ctx.strokeRect(this.x, y, this.width, this.itemHeight);
-                }
 
                 // Radio button circle
                 const radioSize = 16;
@@ -882,6 +868,11 @@
                 ctx.textBaseline = 'middle';
                 ctx.fillText(this.items[i], radioX + radioSize, radioY);
             }
+
+            // Draw outer border around entire control
+            ctx.strokeStyle = isFocused ? this.options.focusColor : this.options.borderColor;
+            ctx.lineWidth = this.options.borderWidth;
+            ctx.strokeRect(this.x, this.y, this.width, this.height);
         }
     }
 
