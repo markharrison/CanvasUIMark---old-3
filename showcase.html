@@ -182,12 +182,13 @@
             'Click Me!',
             () => {
                 ui.showToast('Button clicked!', 'success', 2000);
-            }
+            },
+            { borderRadius: 10 }
         );
         ui.addControl(button1);
         currentY += 70;
 
-        // Menu Control
+        // Menu Control (Vertical with gaps)
         ui.addText('Menu Control:', column1X, currentY, {
             font: 'bold 18px Arial',
             color: '#ffffff'
@@ -201,10 +202,11 @@
                 { label: 'Load Game', callback: () => ui.showToast('Load Game selected', 'info') },
                 { label: 'Options', callback: () => ui.showToast('Options selected', 'info') },
                 { label: 'Exit', callback: () => ui.showToast('Exit selected', 'info') }
-            ]
+            ],
+            { borderRadius: 8, gap: 5, orientation: 'vertical' }
         );
         ui.addControl(menu);
-        currentY += 220;
+        currentY += 230;
 
         // Column 2: Toggle and TextInput
         let column2X = 300;
@@ -223,7 +225,8 @@
             true,
             (value) => {
                 ui.showToast(`Sound ${value ? 'ON' : 'OFF'}`, value ? 'success' : 'warning', 2000);
-            }
+            },
+            { borderRadius: 10 }
         );
         ui.addControl(toggle);
         currentY += 70;
@@ -237,7 +240,8 @@
 
         const textInput = new CanvasUIControls.TextInput(
             column2X, currentY, 300, 50,
-            'Enter your name...'
+            'Enter your name...',
+            { borderRadius: 10 }
         );
         ui.addControl(textInput);
         currentY += 70;
@@ -251,10 +255,30 @@
                 ui.showModal('Input Value', `You entered: ${value}`, [
                     { label: 'OK', callback: () => {} }
                 ]);
-            }
+            },
+            { borderRadius: 8 }
         );
         ui.addControl(showInputButton);
         currentY += 70;
+        
+        // Horizontal Menu Example
+        ui.addText('Horizontal Menu:', column2X, currentY, {
+            font: 'bold 18px Arial',
+            color: '#ffffff'
+        });
+        currentY += 30;
+
+        const horizontalMenu = new CanvasUIControls.Menu(
+            column2X, currentY, 90, 40,
+            [
+                { label: 'Easy', callback: () => ui.showToast('Easy mode', 'info') },
+                { label: 'Med', callback: () => ui.showToast('Medium mode', 'info') },
+                { label: 'Hard', callback: () => ui.showToast('Hard mode', 'info') }
+            ],
+            { borderRadius: 8, gap: 10, orientation: 'horizontal' }
+        );
+        ui.addControl(horizontalMenu);
+        currentY += 60;
 
         // Column 3: Radio and Slider
         let column3X = 650;
@@ -266,7 +290,8 @@
             {
                 backgroundColor: '#2a2a2a',
                 borderColor: '#4CAF50',
-                borderWidth: 2
+                borderWidth: 2,
+                borderRadius: 12
             }
         );
         ui.addControl(radioPanel);
@@ -284,7 +309,8 @@
             1,
             (index, value) => {
                 ui.showToast(`Difficulty: ${value}`, 'info', 2000);
-            }
+            },
+            { borderRadius: 10 }
         );
         ui.addControl(radio);
         currentY += 200;
@@ -302,7 +328,8 @@
             'Volume',
             (value) => {
                 console.log('Volume changed to:', value);
-            }
+            },
+            { borderRadius: 10 }
         );
         ui.addControl(slider);
         currentY += 100;
@@ -314,7 +341,8 @@
             'Speed',
             (value) => {
                 console.log('Speed changed to:', value);
-            }
+            },
+            { borderRadius: 10 }
         );
         ui.addControl(speedSlider);
 

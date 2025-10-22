@@ -423,6 +423,27 @@
         }
     }
 
+    // Helper function to draw rounded rectangles
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+        if (radius === 0) {
+            ctx.rect(x, y, width, height);
+            return;
+        }
+        
+        radius = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.arcTo(x + width, y, x + width, y + radius, radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+        ctx.lineTo(x + radius, y + height);
+        ctx.arcTo(x, y + height, x, y + height - radius, radius);
+        ctx.lineTo(x, y + radius);
+        ctx.arcTo(x, y, x + radius, y, radius);
+        ctx.closePath();
+    }
+
     // Base Control class
     class Control {
         constructor(x, y, width, height, options = {}) {
@@ -439,6 +460,7 @@
                 font: '16px Arial',
                 borderWidth: 2,
                 padding: 10,
+                borderRadius: 0, // Default no rounding
                 ...options
             };
             this.manager = null;
@@ -450,14 +472,26 @@
         }
 
         drawBase(ctx, isFocused) {
+            const radius = this.options.borderRadius;
+            
             // Background
             ctx.fillStyle = this.options.backgroundColor;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            if (radius > 0) {
+                drawRoundedRect(ctx, this.x, this.y, this.width, this.height, radius);
+                ctx.fill();
+            } else {
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
 
             // Border
             ctx.strokeStyle = isFocused ? this.options.focusColor : this.options.borderColor;
             ctx.lineWidth = this.options.borderWidth;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
+            if (radius > 0) {
+                drawRoundedRect(ctx, this.x, this.y, this.width, this.height, radius);
+                ctx.stroke();
+            } else {
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
         }
 
         draw(ctx, isFocused) {
@@ -506,14 +540,26 @@
         }
 
         draw(ctx, isFocused) {
+            const radius = this.options.borderRadius;
+            
             // Background - change color when pressed
             ctx.fillStyle = this.pressed ? this.options.focusColor : this.options.backgroundColor;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            if (radius > 0) {
+                drawRoundedRect(ctx, this.x, this.y, this.width, this.height, radius);
+                ctx.fill();
+            } else {
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
 
             // Border
             ctx.strokeStyle = isFocused ? this.options.focusColor : this.options.borderColor;
             ctx.lineWidth = this.options.borderWidth;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
+            if (radius > 0) {
+                drawRoundedRect(ctx, this.x, this.y, this.width, this.height, radius);
+                ctx.stroke();
+            } else {
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
 
             // Draw label
             ctx.font = this.options.font;
@@ -524,37 +570,72 @@
         }
     }
 
-    // Menu Control (vertical list of buttons)
+    // Menu Control (vertical or horizontal list of buttons)
     class Menu extends Control {
         constructor(x, y, width, itemHeight, items, options = {}) {
-            const height = itemHeight * items.length;
-            super(x, y, width, height, options);
+            // Support both old and new constructor signatures
+            const orientation = options.orientation || 'vertical'; // 'vertical' or 'horizontal'
+            const gap = options.gap || 0; // Gap between items
+            
+            let totalWidth, totalHeight;
+            if (orientation === 'horizontal') {
+                totalWidth = items.length * width + (items.length - 1) * gap;
+                totalHeight = itemHeight;
+            } else {
+                totalWidth = width;
+                totalHeight = items.length * itemHeight + (items.length - 1) * gap;
+            }
+            
+            super(x, y, totalWidth, totalHeight, options);
+            this.itemWidth = width;
             this.itemHeight = itemHeight;
             this.items = items;
             this.selectedIndex = 0;
+            this.orientation = orientation;
+            this.gap = gap;
         }
 
         handleClick(x, y) {
-            const index = Math.floor((y - this.y) / this.itemHeight);
-            if (index >= 0 && index < this.items.length) {
-                this.selectedIndex = index;
-                if (this.items[index].callback) {
-                    this.items[index].callback();
+            for (let i = 0; i < this.items.length; i++) {
+                const itemBounds = this.getItemBounds(i);
+                if (x >= itemBounds.x && x <= itemBounds.x + itemBounds.width &&
+                    y >= itemBounds.y && y <= itemBounds.y + itemBounds.height) {
+                    this.selectedIndex = i;
+                    if (this.items[i].callback) {
+                        this.items[i].callback();
+                    }
+                    break;
                 }
             }
         }
 
+        getItemBounds(index) {
+            if (this.orientation === 'horizontal') {
+                return {
+                    x: this.x + index * (this.itemWidth + this.gap),
+                    y: this.y,
+                    width: this.itemWidth,
+                    height: this.itemHeight
+                };
+            } else {
+                return {
+                    x: this.x,
+                    y: this.y + index * (this.itemHeight + this.gap),
+                    width: this.itemWidth,
+                    height: this.itemHeight
+                };
+            }
+        }
+
         handleKeyDown(e) {
-            if (e.key === 'ArrowUp') {
+            const isVertical = this.orientation === 'vertical';
+            const prevKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
+            const nextKey = isVertical ? 'ArrowDown' : 'ArrowRight';
+            
+            if (e.key === prevKey || e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
                 this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
                 e.preventDefault();
-            } else if (e.key === 'ArrowDown') {
-                this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
-                e.preventDefault();
-            } else if (e.key === 'ArrowLeft') {
-                this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
-                e.preventDefault();
-            } else if (e.key === 'ArrowRight') {
+            } else if (e.key === nextKey || e.key === 'ArrowDown' || e.key === 'ArrowRight') {
                 this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
                 e.preventDefault();
             } else if (e.key === 'Enter' || e.key === ' ') {
@@ -580,8 +661,10 @@
         }
 
         draw(ctx, isFocused) {
+            const radius = this.options.borderRadius;
+            
             for (let i = 0; i < this.items.length; i++) {
-                const y = this.y + i * this.itemHeight;
+                const bounds = this.getItemBounds(i);
                 const isSelected = i === this.selectedIndex;
 
                 // Background
@@ -592,19 +675,30 @@
                 } else {
                     ctx.fillStyle = this.options.backgroundColor;
                 }
-                ctx.fillRect(this.x, y, this.width, this.itemHeight);
+                
+                if (radius > 0) {
+                    drawRoundedRect(ctx, bounds.x, bounds.y, bounds.width, bounds.height, radius);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+                }
 
                 // Border
                 ctx.strokeStyle = isFocused && isSelected ? this.options.focusColor : this.options.borderColor;
                 ctx.lineWidth = this.options.borderWidth;
-                ctx.strokeRect(this.x, y, this.width, this.itemHeight);
+                if (radius > 0) {
+                    drawRoundedRect(ctx, bounds.x, bounds.y, bounds.width, bounds.height, radius);
+                    ctx.stroke();
+                } else {
+                    ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+                }
 
                 // Label
                 ctx.font = this.options.font;
                 ctx.fillStyle = this.options.textColor;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(this.items[i].label, this.x + this.width / 2, y + this.itemHeight / 2);
+                ctx.fillText(this.items[i].label, bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
             }
         }
     }
@@ -655,17 +749,22 @@
             const switchHeight = 25;
             const switchX = this.x + this.width - switchWidth - this.options.padding;
             const switchY = this.y + (this.height - switchHeight) / 2;
+            const switchRadius = this.options.borderRadius > 0 ? Math.min(switchHeight / 2, this.options.borderRadius) : switchHeight / 2;
 
             // Switch background
             ctx.fillStyle = this.value ? this.options.focusColor : '#999999';
-            ctx.fillRect(switchX, switchY, switchWidth, switchHeight);
+            drawRoundedRect(ctx, switchX, switchY, switchWidth, switchHeight, switchRadius);
+            ctx.fill();
 
             // Switch knob
             const knobSize = 20;
             const knobX = this.value ? switchX + switchWidth - knobSize - 2 : switchX + 2;
             const knobY = switchY + 2.5;
+            const knobRadius = this.options.borderRadius > 0 ? Math.min(knobSize / 2, this.options.borderRadius) : knobSize / 2;
+            
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(knobX, knobY, knobSize, knobSize);
+            drawRoundedRect(ctx, knobX, knobY, knobSize, knobSize, knobRadius);
+            ctx.fill();
         }
     }
 
@@ -834,6 +933,8 @@
         }
 
         draw(ctx, isFocused) {
+            const radius = this.options.borderRadius;
+            
             for (let i = 0; i < this.items.length; i++) {
                 const y = this.y + i * this.itemHeight;
                 const isSelected = i === this.selectedIndex;
@@ -872,7 +973,12 @@
             // Draw outer border around entire control
             ctx.strokeStyle = isFocused ? this.options.focusColor : this.options.borderColor;
             ctx.lineWidth = this.options.borderWidth;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
+            if (radius > 0) {
+                drawRoundedRect(ctx, this.x, this.y, this.width, this.height, radius);
+                ctx.stroke();
+            } else {
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
         }
     }
 
@@ -952,25 +1058,32 @@
             const trackX = this.x + this.options.padding;
             const trackWidth = this.width - this.options.padding * 2;
             const trackHeight = 4;
+            const trackRadius = this.options.borderRadius > 0 ? Math.min(trackHeight / 2, this.options.borderRadius / 2) : trackHeight / 2;
 
             ctx.fillStyle = '#666666';
-            ctx.fillRect(trackX, trackY - trackHeight / 2, trackWidth, trackHeight);
+            drawRoundedRect(ctx, trackX, trackY - trackHeight / 2, trackWidth, trackHeight, trackRadius);
+            ctx.fill();
 
             // Draw filled portion
             const percent = (this.value - this.min) / (this.max - this.min);
             ctx.fillStyle = this.options.focusColor;
-            ctx.fillRect(trackX, trackY - trackHeight / 2, trackWidth * percent, trackHeight);
+            drawRoundedRect(ctx, trackX, trackY - trackHeight / 2, trackWidth * percent, trackHeight, trackRadius);
+            ctx.fill();
 
             // Draw slider knob
             const knobSize = 20;
             const knobX = trackX + trackWidth * percent - knobSize / 2;
             const knobY = trackY - knobSize / 2;
+            const knobRadius = this.options.borderRadius > 0 ? Math.min(knobSize / 2, this.options.borderRadius) : knobSize / 2;
 
             ctx.fillStyle = isFocused ? this.options.focusColor : '#ffffff';
-            ctx.fillRect(knobX, knobY, knobSize, knobSize);
+            drawRoundedRect(ctx, knobX, knobY, knobSize, knobSize, knobRadius);
+            ctx.fill();
+            
             ctx.strokeStyle = this.options.textColor;
             ctx.lineWidth = 2;
-            ctx.strokeRect(knobX, knobY, knobSize, knobSize);
+            drawRoundedRect(ctx, knobX, knobY, knobSize, knobSize, knobRadius);
+            ctx.stroke();
 
             // Draw value
             ctx.font = this.options.font;
@@ -1143,18 +1256,23 @@
         }
 
         draw(ctx) {
+            const modalRadius = 10; // Fixed radius for modals
+            const buttonRadius = 5; // Radius for modal buttons
+            
             // Draw overlay
             ctx.fillStyle = `rgba(0, 0, 0, ${this.overlayAlpha})`;
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
             // Draw modal background
             ctx.fillStyle = '#2a2a2a';
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            drawRoundedRect(ctx, this.x, this.y, this.width, this.height, modalRadius);
+            ctx.fill();
 
             // Draw border
             ctx.strokeStyle = '#4CAF50';
             ctx.lineWidth = 3;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
+            drawRoundedRect(ctx, this.x, this.y, this.width, this.height, modalRadius);
+            ctx.stroke();
 
             // Draw title
             ctx.font = 'bold 24px Arial';
@@ -1199,12 +1317,14 @@
 
                 // Button background
                 ctx.fillStyle = i === this.selectedButton ? '#4CAF50' : '#444444';
-                ctx.fillRect(buttonX, buttonsY, this.buttonWidth, this.buttonHeight);
+                drawRoundedRect(ctx, buttonX, buttonsY, this.buttonWidth, this.buttonHeight, buttonRadius);
+                ctx.fill();
 
                 // Button border
                 ctx.strokeStyle = '#666666';
                 ctx.lineWidth = 2;
-                ctx.strokeRect(buttonX, buttonsY, this.buttonWidth, this.buttonHeight);
+                drawRoundedRect(ctx, buttonX, buttonsY, this.buttonWidth, this.buttonHeight, buttonRadius);
+                ctx.stroke();
 
                 // Button label
                 ctx.font = '16px Arial';
