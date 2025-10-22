@@ -49,41 +49,39 @@ Include the library in your HTML:
 
 ### Basic Usage
 
-```html
-<canvas id="gameCanvas" width="1280" height="720"></canvas>
+```js
+import { CanvasUIMark, Button, Menu } from 'canvasUImark';
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ui = new CanvasUIMark(canvas);
+const canvas = document.getElementById('gameCanvas');
+const ui = new CanvasUIMark(canvas);
 
-    // Add a button
-    const button = new CanvasUIControls.Button(
-        100, 100, 200, 50,
-        'Click Me!',
-        () => {
-            ui.showToast('Button clicked!', 'success');
-        }
-    );
-    ui.addControl(button);
+// Add a button
+const button = new Button(
+    100, 100, 200, 50,
+    'Click Me!',
+    () => {
+        ui.showToast('Button clicked!', 'success');
+    }
+);
+ui.addControl(button);
 
-    // Add a menu
-    const menu = new CanvasUIControls.Menu(
-        100, 200, 200, 50,
-        [
-            { label: 'Start Game', callback: () => console.log('Start') },
-            { label: 'Options', callback: () => console.log('Options') },
-            { label: 'Exit', callback: () => console.log('Exit') }
-        ]
-    );
-    ui.addControl(menu);
+// Add a menu
+const menu = new Menu(
+    100, 200, 200, 50,
+    [
+        { label: 'Start Game', callback: () => console.log('Start') },
+        { label: 'Options', callback: () => console.log('Options') },
+        { label: 'Exit', callback: () => console.log('Exit') }
+    ]
+);
+ui.addControl(menu);
 
-    // Handle escape key
-    ui.onEscape = () => {
-        ui.showModal('Paused', 'Game is paused', [
-            { label: 'Resume', callback: () => {} }
-        ]);
-    };
-</script>
+// Handle escape key
+ui.onEscape = () => {
+    ui.showModal('Paused', 'Game is paused', [
+        { label: 'Resume', callback: () => {} }
+    ]);
+};
 ```
 
 ## Documentation
