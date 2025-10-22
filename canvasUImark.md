@@ -77,7 +77,8 @@ const ui = new CanvasUIMark(canvas, options);
 Controls are added to the UI instance:
 
 ```javascript
-const button = new CanvasUIControls.Button(x, y, width, height, label, callback);
+import { Button } from './canvasUImark.js';
+const button = new Button(x, y, width, height, label, callback);
 ui.addControl(button);
 ```
 
