@@ -21,7 +21,9 @@ CanvasUIMark is a JavaScript library for creating UI controls within an HTML Can
 Include the library in your HTML file:
 
 ```html
-<script src="canvasUImark.js"></script>
+<script type="module">
+    import { CanvasUIMark } from './canvasUImark.js';
+</script>
 ```
 
 ### Basic Setup
