@@ -1101,15 +1101,27 @@
         }
 
         draw(ctx, isFocused) {
+            const radius = this.options.borderRadius;
+            
             // Background
             ctx.fillStyle = this.options.backgroundColor;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            if (radius > 0) {
+                drawRoundedRect(ctx, this.x, this.y, this.width, this.height, radius);
+                ctx.fill();
+            } else {
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
 
             // Optional border
             if (this.options.borderWidth > 0) {
                 ctx.strokeStyle = this.options.borderColor;
                 ctx.lineWidth = this.options.borderWidth;
-                ctx.strokeRect(this.x, this.y, this.width, this.height);
+                if (radius > 0) {
+                    drawRoundedRect(ctx, this.x, this.y, this.width, this.height, radius);
+                    ctx.stroke();
+                } else {
+                    ctx.strokeRect(this.x, this.y, this.width, this.height);
+                }
             }
         }
 
