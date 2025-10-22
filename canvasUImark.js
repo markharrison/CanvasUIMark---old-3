@@ -382,11 +382,21 @@
                 this.ctx.fillText(text.text, text.x, text.y);
             }
 
-            // Draw controls
+            // Draw panels first (background layer)
             for (let i = 0; i < this.controls.length; i++) {
                 const control = this.controls[i];
-                const isFocused = i === this.focusIndex;
-                control.draw(this.ctx, isFocused);
+                if (control.constructor.name === 'Panel') {
+                    control.draw(this.ctx, false); // Panels never get focus
+                }
+            }
+
+            // Draw other controls (interactive layer)
+            for (let i = 0; i < this.controls.length; i++) {
+                const control = this.controls[i];
+                if (control.constructor.name !== 'Panel') {
+                    const isFocused = i === this.focusIndex;
+                    control.draw(this.ctx, isFocused);
+                }
             }
 
             // Draw modals
