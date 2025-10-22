@@ -366,6 +366,14 @@
             }
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
+            // Draw panels first (background layer)
+            for (let i = 0; i < this.controls.length; i++) {
+                const control = this.controls[i];
+                if (control.constructor.name === 'Panel') {
+                    control.draw(this.ctx, false); // Panels never get focus
+                }
+            }
+
             // Draw images
             for (let img of this.images) {
                 if (img.image.complete) {
@@ -380,14 +388,6 @@
                 this.ctx.textAlign = text.align;
                 this.ctx.textBaseline = text.baseline;
                 this.ctx.fillText(text.text, text.x, text.y);
-            }
-
-            // Draw panels first (background layer)
-            for (let i = 0; i < this.controls.length; i++) {
-                const control = this.controls[i];
-                if (control.constructor.name === 'Panel') {
-                    control.draw(this.ctx, false); // Panels never get focus
-                }
             }
 
             // Draw other controls (interactive layer)
