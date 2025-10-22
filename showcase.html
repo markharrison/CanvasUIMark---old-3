@@ -107,6 +107,7 @@
         
         <div class="control-group">
             <button onclick="showModalDemo()">Show Modal Dialog</button>
+            <button onclick="showSmallModal()">Show Small Modal</button>
             <button onclick="showToastInfo()">Show Info Toast</button>
             <button onclick="showToastSuccess()">Show Success Toast</button>
             <button onclick="showToastWarning()">Show Warning Toast</button>
@@ -125,10 +126,13 @@
             • Use <strong>TAB</strong> to navigate between controls<br>
             • Use <strong>Arrow Keys</strong> to navigate within menu/radio controls and adjust sliders<br>
             • Use <strong>Enter</strong> or <strong>Space</strong> to activate buttons and toggles<br>
-            • Use <strong>ESC</strong> to test the escape event (check console)<br>
+            • Use <strong>ESC</strong> to test the escape event or close modal dialogs<br>
             • Click with mouse to interact with any control<br>
-            • Connect a gamepad to test controller support (D-pad and A button)<br>
-            • The canvas scales responsively - try resizing your browser window!
+            • Connect a gamepad to test controller support (D-pad, A and B buttons)<br>
+            • Gamepad <strong>B button</strong> acts like ESC key<br>
+            • Gamepad <strong>D-pad left/right</strong> navigates within menus and radio controls<br>
+            • The canvas scales responsively - try resizing your browser window!<br>
+            • <strong>Panel control</strong> shown behind Radio control for visual grouping
         </div>
     </div>
 
@@ -256,6 +260,17 @@
         let column3X = 650;
         currentY = 120;
 
+        // Add a panel behind the radio control for visual grouping
+        const radioPanel = new CanvasUIControls.Panel(
+            column3X - 10, currentY - 10, 270, 220,
+            {
+                backgroundColor: '#2a2a2a',
+                borderColor: '#4CAF50',
+                borderWidth: 2
+            }
+        );
+        ui.addControl(radioPanel);
+
         // Radio Control
         ui.addText('Radio Control:', column3X, currentY, {
             font: 'bold 18px Arial',
@@ -319,12 +334,24 @@
         function showModalDemo() {
             ui.showModal(
                 'Demo Modal Dialog',
-                'This is a modal dialog box. It can display a title, message, and multiple buttons. The background is semi-transparent. Click a button or press ESC to close.',
+                'This is a modal dialog box. It can display a title, message, and multiple buttons. The background is semi-transparent. Click a button, press ESC, or use gamepad B button to close.',
                 [
                     { label: 'Confirm', callback: () => ui.showToast('Confirmed!', 'success') },
                     { label: 'Cancel', callback: () => ui.showToast('Cancelled', 'warning') },
-                    { label: 'Close', callback: () => {} }
+                    { label: 'Exit', callback: () => ui.showToast('Exited', 'info') }
                 ]
+            );
+        }
+
+        function showSmallModal() {
+            ui.showModal(
+                'Quick Question',
+                'Are you sure?',
+                [
+                    { label: 'Yes', callback: () => ui.showToast('Yes selected', 'success') },
+                    { label: 'No', callback: () => {} }
+                ],
+                { width: 400, height: 250 }
             );
         }
 

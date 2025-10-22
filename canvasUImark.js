@@ -79,10 +79,25 @@
             
             // Handle escape key
             if (e.key === 'Escape') {
-                if (this.onEscape) {
+                // Pass to modal first if one exists
+                if (this.modals.length > 0) {
+                    const modal = this.modals[this.modals.length - 1];
+                    if (modal.handleKeyDown) {
+                        modal.handleKeyDown(e);
+                    }
+                } else if (this.onEscape) {
                     this.onEscape();
                 }
                 e.preventDefault();
+                return;
+            }
+
+            // Pass other keys to modal if one exists
+            if (this.modals.length > 0) {
+                const modal = this.modals[this.modals.length - 1];
+                if (modal.handleKeyDown) {
+                    modal.handleKeyDown(e);
+                }
                 return;
             }
 
@@ -174,6 +189,15 @@
         }
 
         handleGamepadButton(buttonIndex) {
+            // Pass to modal first if one exists
+            if (this.modals.length > 0) {
+                const modal = this.modals[this.modals.length - 1];
+                if (modal.handleGamepadButton) {
+                    modal.handleGamepadButton(buttonIndex);
+                }
+                return;
+            }
+
             // Button 0 (A/Cross) = Select
             if (buttonIndex === 0) {
                 if (this.focusIndex >= 0 && this.focusIndex < this.controls.length) {
@@ -181,6 +205,12 @@
                     if (control.activate) {
                         control.activate();
                     }
+                }
+            }
+            // Button 1 (B/Circle) = Exit/Escape
+            else if (buttonIndex === 1) {
+                if (this.onEscape) {
+                    this.onEscape();
                 }
             }
             // Button 12 = D-pad up
@@ -197,6 +227,8 @@
                     const control = this.controls[this.focusIndex];
                     if (control.handleGamepadAxis) {
                         control.handleGamepadAxis(-1);
+                    } else if (control.handleGamepadLeft) {
+                        control.handleGamepadLeft();
                     }
                 }
             }
@@ -206,6 +238,8 @@
                     const control = this.controls[this.focusIndex];
                     if (control.handleGamepadAxis) {
                         control.handleGamepadAxis(1);
+                    } else if (control.handleGamepadRight) {
+                        control.handleGamepadRight();
                     }
                 }
             }
@@ -269,8 +303,8 @@
             this.options.backgroundGradient = gradient;
         }
 
-        showModal(title, message, buttons = []) {
-            const modal = new Modal(this, title, message, buttons);
+        showModal(title, message, buttons = [], options = {}) {
+            const modal = new Modal(this, title, message, buttons, options);
             this.modals.push(modal);
             return modal;
         }
@@ -438,6 +472,8 @@
             this.label = label;
             this.callback = callback;
             this.pressed = false;
+            this.pressedTime = 0;
+            this.pressedDuration = 200; // milliseconds
         }
 
         handleClick(x, y) {
@@ -452,13 +488,32 @@
         }
 
         activate() {
+            this.pressed = true;
+            this.pressedTime = 0;
             if (this.callback) {
                 this.callback();
             }
         }
 
+        update(deltaTime) {
+            if (this.pressed) {
+                this.pressedTime += deltaTime;
+                if (this.pressedTime >= this.pressedDuration) {
+                    this.pressed = false;
+                    this.pressedTime = 0;
+                }
+            }
+        }
+
         draw(ctx, isFocused) {
-            this.drawBase(ctx, isFocused);
+            // Background - change color when pressed
+            ctx.fillStyle = this.pressed ? this.options.focusColor : this.options.backgroundColor;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+
+            // Border
+            ctx.strokeStyle = isFocused ? this.options.focusColor : this.options.borderColor;
+            ctx.lineWidth = this.options.borderWidth;
+            ctx.strokeRect(this.x, this.y, this.width, this.height);
 
             // Draw label
             ctx.font = this.options.font;
@@ -496,12 +551,26 @@
             } else if (e.key === 'ArrowDown') {
                 this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
                 e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
+                e.preventDefault();
             } else if (e.key === 'Enter' || e.key === ' ') {
                 if (this.items[this.selectedIndex].callback) {
                     this.items[this.selectedIndex].callback();
                 }
                 e.preventDefault();
             }
+        }
+
+        handleGamepadLeft() {
+            this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
+        }
+
+        handleGamepadRight() {
+            this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
         }
 
         activate() {
@@ -735,10 +804,43 @@
                     this.callback(this.selectedIndex, this.items[this.selectedIndex]);
                 }
                 e.preventDefault();
+            } else if (e.key === 'ArrowLeft') {
+                this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
+                if (this.callback) {
+                    this.callback(this.selectedIndex, this.items[this.selectedIndex]);
+                }
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
+                if (this.callback) {
+                    this.callback(this.selectedIndex, this.items[this.selectedIndex]);
+                }
+                e.preventDefault();
+            }
+        }
+
+        handleGamepadLeft() {
+            this.selectedIndex = (this.selectedIndex - 1 + this.items.length) % this.items.length;
+            if (this.callback) {
+                this.callback(this.selectedIndex, this.items[this.selectedIndex]);
+            }
+        }
+
+        handleGamepadRight() {
+            this.selectedIndex = (this.selectedIndex + 1) % this.items.length;
+            if (this.callback) {
+                this.callback(this.selectedIndex, this.items[this.selectedIndex]);
             }
         }
 
         draw(ctx, isFocused) {
+            // Draw outer border around entire control
+            if (isFocused) {
+                ctx.strokeStyle = this.options.focusColor;
+                ctx.lineWidth = this.options.borderWidth;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
+
             for (let i = 0; i < this.items.length; i++) {
                 const y = this.y + i * this.itemHeight;
                 const isSelected = i === this.selectedIndex;
@@ -747,10 +849,12 @@
                 ctx.fillStyle = this.options.backgroundColor;
                 ctx.fillRect(this.x, y, this.width, this.itemHeight);
 
-                // Border
-                ctx.strokeStyle = isFocused ? this.options.focusColor : this.options.borderColor;
-                ctx.lineWidth = this.options.borderWidth;
-                ctx.strokeRect(this.x, y, this.width, this.itemHeight);
+                // Border - only draw if not focused (to avoid drawing lines between items)
+                if (!isFocused) {
+                    ctx.strokeStyle = this.options.borderColor;
+                    ctx.lineWidth = this.options.borderWidth;
+                    ctx.strokeRect(this.x, y, this.width, this.itemHeight);
+                }
 
                 // Radio button circle
                 const radioSize = 16;
@@ -886,21 +990,78 @@
         }
     }
 
+    // Panel Control - for grouping other controls with a background
+    class Panel extends Control {
+        constructor(x, y, width, height, options = {}) {
+            super(x, y, width, height, options);
+        }
+
+        draw(ctx, isFocused) {
+            // Background
+            ctx.fillStyle = this.options.backgroundColor;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+
+            // Optional border
+            if (this.options.borderWidth > 0) {
+                ctx.strokeStyle = this.options.borderColor;
+                ctx.lineWidth = this.options.borderWidth;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // Panels don't receive focus or input
+        containsPoint(x, y) {
+            return false;
+        }
+    }
+
     // Modal Dialog
     class Modal {
-        constructor(manager, title, message, buttons = []) {
+        constructor(manager, title, message, buttons = [], options = {}) {
             this.manager = manager;
             this.title = title;
             this.message = message;
             this.buttons = buttons.length > 0 ? buttons : [{ label: 'OK', callback: () => this.close() }];
             this.selectedButton = 0;
 
-            // Calculate dimensions
+            // Calculate dimensions - allow custom sizing
             const canvas = manager.canvas;
             this.overlayAlpha = 0.7;
             
-            this.width = Math.min(600, canvas.width * 0.8);
-            this.height = Math.min(400, canvas.height * 0.6);
+            // Use provided dimensions or calculate based on content
+            if (options.width && options.height) {
+                this.width = Math.min(options.width, canvas.width * 0.9);
+                this.height = Math.min(options.height, canvas.height * 0.9);
+            } else {
+                // Auto-size based on content
+                const ctx = canvas.getContext('2d');
+                ctx.font = '18px Arial';
+                const words = message.split(' ');
+                const maxWidth = Math.min(600, canvas.width * 0.8) - 40;
+                let lineCount = 1;
+                let line = '';
+                
+                for (let word of words) {
+                    const testLine = line + word + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && line !== '') {
+                        lineCount++;
+                        line = word + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                
+                // Calculate height based on content
+                const titleHeight = 60;
+                const messageHeight = lineCount * 25 + 40;
+                const buttonsHeight = 90;
+                const minHeight = 200;
+                
+                this.height = Math.max(minHeight, Math.min(titleHeight + messageHeight + buttonsHeight, canvas.height * 0.8));
+                this.width = Math.min(600, canvas.width * 0.8);
+            }
+            
             this.x = (canvas.width - this.width) / 2;
             this.y = (canvas.height - this.height) / 2;
 
@@ -925,6 +1086,64 @@
                     this.close();
                     return;
                 }
+            }
+        }
+
+        handleKeyDown(e) {
+            if (e.key === 'ArrowLeft') {
+                this.selectedButton = (this.selectedButton - 1 + this.buttons.length) % this.buttons.length;
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                this.selectedButton = (this.selectedButton + 1) % this.buttons.length;
+                e.preventDefault();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                if (this.buttons[this.selectedButton].callback) {
+                    this.buttons[this.selectedButton].callback();
+                }
+                this.close();
+                e.preventDefault();
+            } else if (e.key === 'Escape') {
+                // Find and activate Exit/Close button, or close if none found
+                const exitButton = this.buttons.find(b => 
+                    b.label.toLowerCase() === 'exit' || 
+                    b.label.toLowerCase() === 'close' ||
+                    b.label.toLowerCase() === 'cancel'
+                );
+                if (exitButton && exitButton.callback) {
+                    exitButton.callback();
+                }
+                this.close();
+                e.preventDefault();
+            }
+        }
+
+        handleGamepadButton(buttonIndex) {
+            // Button 0 (A/Cross) = Select current button
+            if (buttonIndex === 0) {
+                if (this.buttons[this.selectedButton].callback) {
+                    this.buttons[this.selectedButton].callback();
+                }
+                this.close();
+            }
+            // Button 1 (B/Circle) = Exit/Cancel like ESC
+            else if (buttonIndex === 1) {
+                const exitButton = this.buttons.find(b => 
+                    b.label.toLowerCase() === 'exit' || 
+                    b.label.toLowerCase() === 'close' ||
+                    b.label.toLowerCase() === 'cancel'
+                );
+                if (exitButton && exitButton.callback) {
+                    exitButton.callback();
+                }
+                this.close();
+            }
+            // Button 14 = D-pad left
+            else if (buttonIndex === 14) {
+                this.selectedButton = (this.selectedButton - 1 + this.buttons.length) % this.buttons.length;
+            }
+            // Button 15 = D-pad right
+            else if (buttonIndex === 15) {
+                this.selectedButton = (this.selectedButton + 1) % this.buttons.length;
             }
         }
 
@@ -1105,7 +1324,8 @@
         Toggle,
         TextInput,
         Radio,
-        Slider
+        Slider,
+        Panel
     };
 
 })(typeof window !== 'undefined' ? window : global);
