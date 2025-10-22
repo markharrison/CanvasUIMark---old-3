@@ -136,13 +136,22 @@
         </div>
     </div>
 
-    <script src="canvasUImark.js"></script>
-    <script>
+    <script type="module">
+        // Import the library
+        import { CanvasUIMark, Button, Menu, Toggle, TextInput, Radio, Slider, Panel } from './canvasUImark.js';
+
+        // Make classes available globally for easier use in event handlers
+        window.CanvasUIMark = CanvasUIMark;
+        window.CanvasUIControls = { Button, Menu, Toggle, TextInput, Radio, Slider, Panel };
+
         // Initialize the canvas
         const canvas = document.getElementById('gameCanvas');
         const ui = new CanvasUIMark(canvas, {
             backgroundColor: '#1a1a1a'
         });
+
+        // Make ui available globally for event handlers
+        window.ui = ui;
 
         // Set up escape key handler
         ui.onEscape = () => {
@@ -177,7 +186,7 @@
         });
         currentY += 30;
 
-        const button1 = new CanvasUIControls.Button(
+        const button1 = new Button(
             column1X, currentY, 200, 50,
             'Click Me!',
             () => {
@@ -195,7 +204,7 @@
         });
         currentY += 30;
 
-        const menu = new CanvasUIControls.Menu(
+        const menu = new Menu(
             column1X, currentY, 200, 50,
             [
                 { label: 'New Game', callback: () => ui.showToast('New Game selected', 'info') },
@@ -219,7 +228,7 @@
         });
         currentY += 30;
 
-        const toggle = new CanvasUIControls.Toggle(
+        const toggle = new Toggle(
             column2X, currentY, 250, 50,
             'Sound Effects',
             true,
@@ -238,7 +247,7 @@
         });
         currentY += 30;
 
-        const textInput = new CanvasUIControls.TextInput(
+        const textInput = new TextInput(
             column2X, currentY, 300, 50,
             'Enter your name...',
             { borderRadius: 10 }
@@ -247,7 +256,7 @@
         currentY += 70;
 
         // Another button to show text input value
-        const showInputButton = new CanvasUIControls.Button(
+        const showInputButton = new Button(
             column2X, currentY, 200, 50,
             'Show Input Value',
             () => {
@@ -268,7 +277,7 @@
         });
         currentY += 30;
 
-        const horizontalMenu = new CanvasUIControls.Menu(
+        const horizontalMenu = new Menu(
             column2X, currentY, 90, 40,
             [
                 { label: 'Easy', callback: () => ui.showToast('Easy mode', 'info') },
@@ -285,7 +294,7 @@
         currentY = 120;
 
         // Add a panel behind the radio control for visual grouping
-        const radioPanel = new CanvasUIControls.Panel(
+        const radioPanel = new Panel(
             column3X - 10, currentY - 10, 550, 460,
             {
                 backgroundColor: '#888888',
@@ -303,7 +312,7 @@
         });
         currentY += 30;
 
-        const radio = new CanvasUIControls.Radio(
+        const radio = new Radio(
             column3X, currentY, 250, 45,
             ['Easy', 'Medium', 'Hard', 'Expert'],
             1,
@@ -322,7 +331,7 @@
         });
         currentY += 30;
 
-        const slider = new CanvasUIControls.Slider(
+        const slider = new Slider(
             column3X, currentY, 300, 80,
             0, 100, 50, 5,
             'Volume',
@@ -335,7 +344,7 @@
         currentY += 100;
 
         // Another slider with different range
-        const speedSlider = new CanvasUIControls.Slider(
+        const speedSlider = new Slider(
             column3X, currentY, 300, 80,
             10, 200, 100, 10,
             'Speed',
@@ -359,7 +368,8 @@
         };
 
         // External control functions
-        function showModalDemo() {
+        // Functions for external controls - make them global for onclick handlers
+        window.showModalDemo = function() {
             ui.showModal(
                 'Demo Modal Dialog',
                 'This is a modal dialog box. It can display a title, message, and multiple buttons. The background is semi-transparent. Click a button, press ESC, or use gamepad B button to close.',
@@ -371,7 +381,7 @@
             );
         }
 
-        function showSmallModal() {
+        window.showSmallModal = function() {
             ui.showModal(
                 'Quick Question',
                 'Are you sure?',
@@ -383,28 +393,28 @@
             );
         }
 
-        function showToastInfo() {
+        window.showToastInfo = function() {
             ui.showToast('This is an info toast notification', 'info', 3000);
         }
 
-        function showToastSuccess() {
+        window.showToastSuccess = function() {
             ui.showToast('Operation completed successfully!', 'success', 3000);
         }
 
-        function showToastWarning() {
+        window.showToastWarning = function() {
             ui.showToast('Warning: This is a test warning', 'warning', 4000);
         }
 
-        function showToastError() {
+        window.showToastError = function() {
             ui.showToast('Error: Something went wrong', 'error', 4000);
         }
 
-        function changeBackground(color) {
+        window.changeBackground = function(color) {
             ui.setBackground(color);
             ui.showToast('Background changed', 'info', 2000);
         }
 
-        function setGradientBackground() {
+        window.setGradientBackground = function() {
             ui.setBackgroundGradient([
                 { offset: 0, color: '#1a1a1a' },
                 { offset: 0.5, color: '#2c3e50' },

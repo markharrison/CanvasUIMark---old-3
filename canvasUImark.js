@@ -5,11 +5,31 @@
  * @author Mark Harrison
  */
 
-(function(global) {
-    'use strict';
+'use strict';
 
-    // Main CanvasUIMark class
-    class CanvasUIMark {
+// Helper function to draw rounded rectangles
+export function drawRoundedRect(ctx, x, y, width, height, radius) {
+    if (radius === 0) {
+        ctx.rect(x, y, width, height);
+        return;
+    }
+    
+    radius = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+}
+
+// Main CanvasUIMark class
+export class CanvasUIMark {
         constructor(canvas, options = {}) {
             this.canvas = canvas;
             this.ctx = canvas.getContext('2d');
@@ -433,29 +453,8 @@
         }
     }
 
-    // Helper function to draw rounded rectangles
-    function drawRoundedRect(ctx, x, y, width, height, radius) {
-        if (radius === 0) {
-            ctx.rect(x, y, width, height);
-            return;
-        }
-        
-        radius = Math.min(radius, width / 2, height / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + width - radius, y);
-        ctx.arcTo(x + width, y, x + width, y + radius, radius);
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-        ctx.lineTo(x + radius, y + height);
-        ctx.arcTo(x, y + height, x, y + height - radius, radius);
-        ctx.lineTo(x, y + radius);
-        ctx.arcTo(x, y, x + radius, y, radius);
-        ctx.closePath();
-    }
-
-    // Base Control class
-    class Control {
+// Base Control class
+export class Control {
         constructor(x, y, width, height, options = {}) {
             this.x = x;
             this.y = y;
@@ -509,8 +508,8 @@
         }
     }
 
-    // Button Control
-    class Button extends Control {
+// Button Control
+export class Button extends Control {
         constructor(x, y, width, height, label, callback, options = {}) {
             super(x, y, width, height, options);
             this.label = label;
@@ -581,7 +580,7 @@
     }
 
     // Menu Control (vertical or horizontal list of buttons)
-    class Menu extends Control {
+export class Menu extends Control {
         constructor(x, y, width, itemHeight, items, options = {}) {
             // Support both old and new constructor signatures
             const orientation = options.orientation || 'vertical'; // 'vertical' or 'horizontal'
@@ -714,7 +713,7 @@
     }
 
     // Toggle Control
-    class Toggle extends Control {
+export class Toggle extends Control {
         constructor(x, y, width, height, label, initialValue, callback, options = {}) {
             super(x, y, width, height, options);
             this.label = label;
@@ -778,8 +777,8 @@
         }
     }
 
-    // TextInput Control
-    class TextInput extends Control {
+// TextInput Control
+export class TextInput extends Control {
         constructor(x, y, width, height, placeholder, options = {}) {
             super(x, y, width, height, options);
             this.placeholder = placeholder;
@@ -880,7 +879,7 @@
     }
 
     // Radio Control
-    class Radio extends Control {
+export class Radio extends Control {
         constructor(x, y, width, itemHeight, options, selectedIndex, callback, opts = {}) {
             const height = itemHeight * options.length;
             super(x, y, width, height, opts);
@@ -992,8 +991,8 @@
         }
     }
 
-    // Slider Control
-    class Slider extends Control {
+// Slider Control
+export class Slider extends Control {
         constructor(x, y, width, height, min, max, value, step, label, callback, options = {}) {
             super(x, y, width, height, options);
             this.min = min;
@@ -1104,8 +1103,8 @@
         }
     }
 
-    // Panel Control - for grouping other controls with a background
-    class Panel extends Control {
+// Panel Control - for grouping other controls with a background
+export class Panel extends Control {
         constructor(x, y, width, height, options = {}) {
             super(x, y, width, height, options);
         }
@@ -1142,7 +1141,8 @@
     }
 
     // Modal Dialog
-    class Modal {
+// Modal Dialog class
+export class Modal {
         constructor(manager, title, message, buttons = [], options = {}) {
             this.manager = manager;
             this.title = title;
@@ -1359,7 +1359,8 @@
     }
 
     // Toast Notification
-    class Toast {
+// Toast Notification class
+export class Toast {
         constructor(manager, message, type, duration) {
             this.manager = manager;
             this.message = message;
@@ -1448,17 +1449,3 @@
             }
         }
     }
-
-    // Export to global scope
-    global.CanvasUIMark = CanvasUIMark;
-    global.CanvasUIControls = {
-        Button,
-        Menu,
-        Toggle,
-        TextInput,
-        Radio,
-        Slider,
-        Panel
-    };
-
-})(typeof window !== 'undefined' ? window : global);
